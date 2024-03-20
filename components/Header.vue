@@ -33,7 +33,7 @@
                                         <li><a href="#"><img src="assets/imgs/theme/flag-ru.png" alt="">Pусский</a></li>
                                     </ul>
                                 </li>
-                                <li><i class="fi-rs-user"></i><NuxtLink href="/">Log In / Sign Up</NuxtLink></li>
+                                <li><i class="fi-rs-user"></i><NuxtLink href="/auth/login">Log In / Sign Up {{ count }}</NuxtLink></li>
                             </ul>
                         </div>
                     </div>
@@ -44,3 +44,8 @@
     </header>
    <MobileMenu/>
 </template>
+
+<script setup>
+const count = useState('counter', () => Math.round(Math.random() * 100))
+
+</script>

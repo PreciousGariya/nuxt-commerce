@@ -41,3 +41,5 @@ export default defineEventHandler(async (event) => {
   // If you return nothing, nuxt may throw an error or just hang
   return "Email sent successfully!";
 });
+
+// await emailSender.sendMail(email, 'Email Verification', { otp: verificationCode, name: user.name }, 'verification-code');

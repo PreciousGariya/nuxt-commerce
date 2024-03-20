@@ -4,6 +4,7 @@
         <Breadcrumb />
         <slot />
     </main>
+    <Loader/>
     <Footer />
 </template>
 

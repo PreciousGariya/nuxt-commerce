@@ -11,12 +11,13 @@
                   <div class="heading_s1">
                     <h3 class="mb-30">Login</h3>
                   </div>
-                  <form method="post">
+                  <form method="post" @submit.prevent="handleLoginSubmit">
                     <div class="form-group">
-                      <input type="text" required="" name="email" placeholder="Your Email">
+                      <input type="text" required="" name="email" v-model="loginUser.email" placeholder="Your Email">
                     </div>
                     <div class="form-group">
-                      <input required="" type="password" name="password" placeholder="Password">
+                      <input required="" type="password" name="password" v-model="loginUser.password"
+                        placeholder="Password">
                     </div>
                     <div class="login_footer form-group">
                       <div class="chek-form">
@@ -31,6 +32,7 @@
                     <div class="form-group">
                       <button type="submit" class="btn btn-fill-out btn-block hover-up" name="login">Log in</button>
                     </div>
+                    {{ loginUser }}
                   </form>
                 </div>
               </div>
@@ -47,7 +49,7 @@
                     website, to manage access to your account, and for other purposes described
                     in our privacy policy
                   </p>
-                  <form method="post">
+                  <form method="post" @submit.prevent="handleRegisterSubmit" :schema="registerSchema">
                     <div class="form-group">
                       <input type="text" v-model="registerUser.name" required="" name="name" placeholder="Name">
                     </div>
@@ -55,16 +57,18 @@
                       <input type="text" required="" v-model="registerUser.email" name="email" placeholder="Email">
                     </div>
                     <div class="form-group">
-                      <input required="" type="password" v-model="registerUser.password" name="password" placeholder="Password">
+                      <input required="" type="password" v-model="registerUser.password" name="password"
+                        placeholder="Password">
                     </div>
                     <div class="form-group">
-                      <input required="" type="password" v-model="registerUser.confirmPassword" name="password" placeholder="Confirm password">
+                      <input required="" type="password" v-model="registerUser.confirmPassword" name="password"
+                        placeholder="Confirm password">
                     </div>
                     <div class="login_footer form-group">
                       <div class="chek-form">
                         <div class="custome-checkbox">
-                          <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox12"
-                            value="">
+                          <input class="form-check-input" v-model="registerUser.terms" type="checkbox" name="checkbox"
+                            id="exampleCheckbox12" value="">
                           <label class="form-check-label" for="exampleCheckbox12"><span>I
                               agree to terms &amp; Policy.</span></label>
                         </div>
@@ -74,6 +78,8 @@
                     <div class="form-group">
                       <button type="submit" class="btn btn-fill-out btn-block hover-up" name="login">Submit &amp;
                         Register</button>
+                      <br>
+                      {{ registerUser }}
                     </div>
                   </form>
                   <div class="divider-text-center mt-15 mb-15">
@@ -94,35 +100,152 @@
       </div>
     </div>
   </section>
+
 </template>
 
 <script lang="ts" setup>
+import { z } from "zod";
+const loader = useState('loader')
 
+const registerSchema = z.object({
+  name: z.string().min(5).max(15),
+  email: z.string().email().min(1),
+  password: z.string().min(8),
+  confirmPassword: z.string(),
+  terms: z.boolean().refine(data => data === true, {
+    message: "You must accept the terms and conditions",
+  })
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+});
+const loginSchema = z.object({
+  email: z.string().email().min(1),
+  password: z.string(),
+});
+// Initialize reactive object for registration form fields
 const registerUser = ref({
   name: "",
   email: "",
   password: "",
-  confirmPassword: ""
+  confirmPassword: "",
+  terms: false
 });
 
-const { register, requestEmailVerify } = useAuth();
+const loginUser = ref({
+  email: "",
+  password: "",
 
-// Function to handle the registration process
-const handleSubmit = async () => {
+});
+
+// Destructure necessary functions from authentication hook
+const { login, register, requestEmailVerify } = useAuth();
+const handleLoginSubmit = async () => {
+  loader.value = true
   try {
-    await register({
-      email: "john@example.com",
-      name: "Johnathan Green",
-      password: "your_password",
-    });
+    // Validate registration data using Zod schema
+    const { data, error } = loginSchema.safeParse(loginUser.value);
+    // Check if validation succeeded
+    if (error) {
+      loader.value = false
+      console.log(error.message); // Log validation error
+      //each error.message
+      error.errors.forEach(validationError => {
+        // console.log(validationError.message); // Log each validation error message
+        // console.log(validationError.message)
+        push.error(validationError.message)
+      });
+      return;
 
+    }
+
+    // Call register function from authentication hook
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: loginUser.value.email,
+        password: loginUser.value.password
+      })
+    });
+    loader.value = false
+    console.log('response', response)
+    if (!response.ok) {
+      const errorData = await response.json(); // Parse the error response
+      throw new Error(errorData.message); // Throw an error with the error message from the server
+      push.error(errorData.message)
+    }
+
+    const res = await response.json();
+
+    console.log('res', res)
+
+
+    if (res.access_token) {
+      navigateTo('/app/dashboard');
+    }
+
+  } catch (error: any) {
+    console.log('error', error.message);
+    loader.value = false
+    push.error(error.message)
+
+    if(error.message==='account-not-verified'){
+      navigateTo('/auth/verify-email');
+    }
+  }
+
+}
+// Function to handle the registration process
+const handleRegisterSubmit = async () => {
+  loader.value = true
+  try {
+    // Validate registration data using Zod schema
+    const { data, error } = registerSchema.safeParse(registerUser.value);
+    // Check if validation succeeded
+    if (error) {
+      loader.value = false
+      console.log(error.message); // Log validation error
+      //each error.message
+      error.errors.forEach(validationError => {
+        // console.log(validationError.message); // Log each validation error message
+        // console.log(validationError.message)
+        push.error(validationError.message)
+      });
+      return;
+
+    }
+
+    // Call register function from authentication hook
+    const signup = await register({
+      name: registerUser.value.name,
+      email: registerUser.value.email,
+      password: registerUser.value.password
+    });
+    loader.value = false
+
+    console.log('signup.status', signup.status)
+    if (signup.status === 'ok') {
+      push.success('Registration successful.')
+
+    }
     // Send email verification
     // This is only required if `requireEmailVerification` is set to `true`
     // Remember to have the email configuration set up
-    await requestEmailVerify("john@example.com");
+    loader.value = true
+
+    const email = await requestEmailVerify(registerUser.value.email);
+    if (email.status === 'ok') {
+      push.success('Please check your email for verification link.')
+    }
+    loader.value = false
+
   } catch (error: any) {
-    console.log(error.data.message);
-    //TODO: show the user a toast message
+    console.log(error.message);
+    loader.value = false
+    //TODO: show the user a toast message for registration error
   }
 };
+
 </script>

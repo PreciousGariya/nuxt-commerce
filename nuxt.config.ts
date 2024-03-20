@@ -2,10 +2,22 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
-  modules: ["@bg-dev/nuxt-auth"],
-  css: ["~/assets/css/main.css"],
+  modules: ["@bg-dev/nuxt-auth" , "notivue/nuxt"],
+  css: ["~/assets/css/main.css","notivue/notifications.css","notivue/animations.css" ],
   js: ["~/assets/js/main.js"],
+ 
+  notivue: {
+    position: 'top-right',
+    limit: 4,
+    enqueue: true,
+    notifications: {
+      global: {
+        duration: 10000
+      }
+    }
+  },
   auth: {
+
     oauth: {
       "github": {
         clientId: "",
