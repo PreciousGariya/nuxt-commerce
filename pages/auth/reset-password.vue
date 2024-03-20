@@ -9,7 +9,8 @@
   </template>
   
   <script lang="ts" setup>
-  
+  definePageMeta({ middleware: "auth" }); // Redirects to login route when not loggedIn
+
 
   </script>
   

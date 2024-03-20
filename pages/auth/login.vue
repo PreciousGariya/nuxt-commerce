@@ -104,6 +104,11 @@
 </template>
 
 <script lang="ts" setup>
+
+definePageMeta({ middleware: "guest" }); // Redirects to home route when loggedIn
+
+
+
 import { z } from "zod";
 const loader = useState('loader')
 
@@ -183,7 +188,7 @@ const handleLoginSubmit = async () => {
 
 
     if (res.access_token) {
-      navigateTo('/app/dashboard');
+      await navigateTo('/app/dashboard');
     }
 
   } catch (error: any) {
@@ -192,7 +197,7 @@ const handleLoginSubmit = async () => {
     push.error(error.message)
 
     if(error.message==='account-not-verified'){
-      navigateTo('/auth/verify-email');
+      await navigateTo('/auth/verify-email');
     }
   }
 

@@ -34,11 +34,22 @@
 </template>
 
 <script lang="ts" setup>
+definePageMeta({ middleware: "auth" }); // Redirects to login route when not loggedIn
+
 import { z } from 'zod';
 const loader = useState('loader')
 
 const { requestEmailVerify } = useAuth();
+const auth = useAuthSession();
+const user = auth.user.value;
 
+onMounted(async () => {
+if(user.verified){
+    push.success('Your email is already verified')
+    await navigateTo('/')
+    return
+}
+});
 const verifyEmail = ref({
     email: ''
 })

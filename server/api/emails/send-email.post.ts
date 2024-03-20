@@ -1,6 +1,6 @@
 // We have to install the nodemailer package first `npm install nodemailer`
 import nodemailer from "nodemailer";
-
+import {PrismaClient} from "@prisma/client";
 export default defineEventHandler(async (event) => {
   // Verify API Key
   const apiKey = getRequestHeader(event, "authorization");
@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   if (apiKey !== apiKeyConfig) {
     throw createError({ statusCode: 401, message: "unauthorized" });
   }
-
+  const prisma= PrismaClient();
   // Read the request body
   const body = await readBody<{
     to: string;
@@ -16,6 +16,23 @@ export default defineEventHandler(async (event) => {
     subject: string;
     html: string;
   }>(event);
+
+//check user exist
+const user = prisma.user.findUnique({
+  where: {
+    email: body.to
+  }
+});
+
+if (!user) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: "User not found",
+  });
+}
+
+//
+
 
   // Create transporter with SMTP settings
   // A test account can be created at https://ethereal.email/ for development
