@@ -34,7 +34,7 @@
 </template>
 
 <script lang="ts" setup>
-definePageMeta({ middleware: "auth" }); // Redirects to login route when not loggedIn
+// definePageMeta({ middleware: "auth" }); // Redirects to login route when not loggedIn
 
 import { z } from 'zod';
 const loader = useState('loader')
@@ -42,9 +42,22 @@ const loader = useState('loader')
 const { requestEmailVerify } = useAuth();
 const auth = useAuthSession();
 const user = auth.user.value;
-
+const route =useRoute();
 onMounted(async () => {
-if(user.verified){
+
+// get params
+const token =route.query?.token??null
+
+if(token && user){
+    const verify = $fetch('/api/auth/verify-token',{
+        method:'POST',
+        body:{
+            token,
+            email:user?.email
+        }
+    })
+}
+if(user?.verified){
     push.success('Your email is already verified')
     await navigateTo('/')
     return

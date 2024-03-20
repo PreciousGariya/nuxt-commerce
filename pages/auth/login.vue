@@ -32,7 +32,6 @@
                     <div class="form-group">
                       <button type="submit" class="btn btn-fill-out btn-block hover-up" name="login">Log in</button>
                     </div>
-                    {{ loginUser }}
                   </form>
                 </div>
               </div>
@@ -79,7 +78,6 @@
                       <button type="submit" class="btn btn-fill-out btn-block hover-up" name="login">Submit &amp;
                         Register</button>
                       <br>
-                      {{ registerUser }}
                     </div>
                   </form>
                   <div class="divider-text-center mt-15 mb-15">
@@ -196,7 +194,7 @@ const handleLoginSubmit = async () => {
     loader.value = false
     push.error(error.message)
 
-    if(error.message==='account-not-verified'){
+    if (error.message === 'account-not-verified') {
       await navigateTo('/auth/verify-email');
     }
   }
@@ -221,23 +219,29 @@ const handleRegisterSubmit = async () => {
       return;
 
     }
-
-    // Call register function from authentication hook
-    const signup = await register({
-      name: registerUser.value.name,
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: registerUser.value.name,
       email: registerUser.value.email,
       password: registerUser.value.password
+      })
     });
     loader.value = false
-
-    console.log('signup.status', signup.status)
-    if (signup.status === 'ok') {
-      push.success('Registration successful.')
-
+    console.log('response', response)
+    if (!response.ok) {
+      const errorData = await response.json(); // Parse the error response
+      throw new Error(errorData.message); // Throw an error with the error message from the server
+      push.error(errorData.message)
     }
-    // Send email verification
-    // This is only required if `requireEmailVerification` is set to `true`
-    // Remember to have the email configuration set up
+
+    const res = await response.json();
+
+    console.log('res', res)
+
     loader.value = true
 
     const email = await requestEmailVerify(registerUser.value.email);
@@ -249,6 +253,12 @@ const handleRegisterSubmit = async () => {
   } catch (error: any) {
     console.log(error.message);
     loader.value = false
+    if(error.message === 'email-used-with-default'){
+      push.error('Please Register with your new email.')
+      
+    }else{
+      push.error('Something went wrong. Please try again.')
+    }
     //TODO: show the user a toast message for registration error
   }
 };

@@ -46,9 +46,9 @@
                                     <a class="language-dropdown-active" href="app/dashboard"> <i class="fi-rs-user"></i>
                                         {{ user.name }} <i class="fi-rs-angle-small-down"></i></a>
                                     <ul class="language-dropdown">
-                                        <li><a href="#"><i class="fi-rs-user"></i>Account</a></li>
-                                        <li><a href="#"><i class="fi-rs-user"></i>Orders</a></li>
-                                        <li><a href="#"><i class="fi-rs-user"></i>Logout</a></li>
+                                        <li><a href="/user/profile">Account</a></li>
+                                        <li><a href="/user/orders">Orders</a></li>
+                                        <li><a href="#" @click="logout()">Logout</a></li>
                                     </ul>
                                 </li>
                             </ul>
@@ -65,6 +65,8 @@
 <script setup>
 const count = useState('counter', () => Math.round(Math.random() * 100))
 const auth = useAuthSession();
+const { logout } = useAuth();
+
 const user = auth.user.value;
 console.log('user', user)
 // console.log('getAllSessions', auth.getAllSessions())

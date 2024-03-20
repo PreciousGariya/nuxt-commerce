@@ -65,7 +65,7 @@ export default defineNuxtConfig({
       from: process.env.SMTP_FROM, // The email address to send from
       provider: {
         name: "custom",
-        url: "/api/emails/send-email", // This could also point to an external service/api endpoint
+        url: "/api/emails/verify-email", // This could also point to an external service/api endpoint
         authorization: "api_key",
       },
       templates: {
